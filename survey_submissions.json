@@ -1,0 +1,84 @@
+[
+  {
+    "respondent": {
+      "name": "mnm",
+      "department": "Thành viên nhóm",
+      "submittedAt": "14:33:15 9/10/2026"
+    },
+    "feedback": "Không có",
+    "answers": [
+      {
+        "index": 1,
+        "id": "1",
+        "question": "Bạn đã sẵn sàng cho chuyến đi này chưa!",
+        "chosenOption": "A",
+        "chosenText": "Có",
+        "customOpinion": ""
+      },
+      {
+        "index": 2,
+        "id": "2",
+        "question": "Về ăn uống bạn có bị dị ứng loại hải sản nào không?",
+        "chosenOption": "A",
+        "chosenText": "Không dị ứng gì ăn sập biển cả",
+        "customOpinion": ""
+      },
+      {
+        "index": 3,
+        "id": "3",
+        "question": "Bạn có muốn đi Tour câu mực đêm trên biển (~200k - 250k/người, gồm cần câu + nấu cháo/mực tươi tại tàu) không?",
+        "chosenOption": "A",
+        "chosenText": "Rất hào hứng! Nhất định phải thử câu và ăn mực tươi sống tại chỗ",
+        "customOpinion": ""
+      },
+      {
+        "index": 4,
+        "id": "4",
+        "question": "Lịch rảnh của bạn có thể đi vào thời gian nào phù hợp nhất? với tour 3N2D",
+        "chosenOption": "A",
+        "chosenText": "Đi dịp cuối tuần (Thứ 7 & Chủ Nhật & Thứ2)",
+        "customOpinion": ""
+      },
+      {
+        "index": 5,
+        "id": "5",
+        "question": "Hãy chọn địa điểm nhà nghỉ / homestay bạn muốn ở nhất tại đảo Nam Du?",
+        "chosenOption": "C",
+        "chosenText": "Bãi Sỏi Beach Nam Du (Biệt lập yên tĩnh & bãi san hô tự nhiên lặn ngắm cá)",
+        "customOpinion": ""
+      },
+      {
+        "index": 6,
+        "id": "6",
+        "question": "Về cách chia phòng ngủ bạn muốn sắp xếp như thế nào?",
+        "chosenOption": "C",
+        "chosenText": "Mỗi người hoặc mỗi cặp 1 phòng riêng tư tuyệt đối (Chi phí cao hơn)",
+        "customOpinion": ""
+      },
+      {
+        "index": 7,
+        "id": "7",
+        "question": "Buổi tối bên bờ biển bạn muốn tụ tập làm gì nhất?",
+        "chosenOption": "C",
+        "chosenText": "Oanh tạc chợ đêm ăn vặt và mua quà đặc sản",
+        "customOpinion": ""
+      },
+      {
+        "index": 8,
+        "id": "8",
+        "question": "Mức chi phí (Budget) dự kiến mỗi người bạn cảm thấy hợp lý nhất? (Tour 3N2D)",
+        "chosenOption": "C",
+        "chosenText": "Khoảng 5.0 - 7.0 triệu / người",
+        "customOpinion": ""
+      },
+      {
+        "index": 9,
+        "id": "9",
+        "question": "Bạn có thể kiêm nhiệm vai trò gì trong chuyến đi này?",
+        "chosenOption": "C",
+        "chosenText": "Tài xế lái xe hoặc chuyên gia săn quán ngon",
+        "customOpinion": ""
+      }
+    ]
+  }
+]

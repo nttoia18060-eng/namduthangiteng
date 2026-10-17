@@ -1,0 +1,8 @@
+﻿# Temporary & Cache files
+unpack.py
+unpack_code.py
+pack_project.py
+
+# Sensitive or generated submissions data (optional)
+# survey_submissions.csv
+# survey_submissions.json

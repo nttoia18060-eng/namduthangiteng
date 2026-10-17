@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Khảo Sát Ý Kiến Trực Tuyến | Online Survey</title>
+  <meta name="description" content="Hệ thống khảo sát ý kiến trực tuyến tự động đọc câu hỏi từ file CSV và gửi kết quả về email." />
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  
+  <!-- PapaParse for robust CSV parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- Canvas Confetti for celebrate submission -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Ocean ambient animated glow and wave decorations -->
+  <div class="ocean-bg-layer">
+    <div class="ocean-orb ocean-orb-1"></div>
+    <div class="ocean-orb ocean-orb-2"></div>
+    <div class="ocean-orb ocean-orb-3"></div>
+    <!-- Subtle SVG Wave header backdrop -->
+    <div class="ocean-waves">
+      <svg class="wave-svg" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path fill="rgba(14, 165, 233, 0.08)" fill-opacity="1" d="M0,192L48,197.3C96,203,192,213,288,192C384,171,480,117,576,112C672,107,768,149,864,170.7C960,192,1056,192,1152,176C1248,160,1344,128,1392,112L1440,96L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
+        <path fill="rgba(20, 184, 166, 0.06)" fill-opacity="1" d="M0,128L48,144C96,160,192,192,288,186.7C384,181,480,139,576,133.3C672,128,768,160,864,181.3C960,203,1056,213,1152,197.3C1248,181,1344,139,1392,117.3L1440,96L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="logo-icon ocean-glow">
+          <!-- Wave & Sun modern ocean icon -->
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path>
+            <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path>
+            <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-badge-wrap">
+            <h1 class="brand-title">Khảo Sát Đi Biển Hội Bạn Thân 🏖️✨</h1>
+            <span class="ocean-tag">🌸 Kèo Đảo Nam Du</span>
+          </div>
+          <p class="brand-subtitle">Chốt gu ăn chơi, check dị ứng hải sản, tour câu mực đêm &amp; ngày vi vu nè!</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Ocean Chill Sound & Ambient Music Pill -->
+        <div class="ocean-audio-pill" id="oceanAudioPill">
+          <button type="button" id="bgMusicToggleBtn" class="audio-btn active" title="Bật/Tắt nhạc nền chill Nam Du">
+            <span class="audio-wave-bars">
+              <span class="bar bar-1"></span>
+              <span class="bar bar-2"></span>
+              <span class="bar bar-3"></span>
+              <span class="bar bar-4"></span>
+            </span>
+            <span id="musicBtnLabel" class="music-label">Nhạc Nền: Bật</span>
+          </button>
+          <div class="audio-volume-wrap" title="Điều chỉnh âm lượng nhạc nền">
+            <span class="volume-icon">🔉</span>
+            <input type="range" id="bgMusicVolume" min="0" max="1" step="0.05" value="0.35" class="volume-slider" aria-label="Âm lượng nhạc nền" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sticky Progress Bar -->
+  <div class="progress-wrapper">
+    <div class="progress-info">
+      <span id="progressText">Đang chuẩn bị câu hỏi...</span>
+      <span id="progressPercent" class="badge">0%</span>
+    </div>
+    <div class="progress-track">
+      <div id="progressBar" class="progress-fill" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <main class="main-container">
+    <form id="surveyForm" onsubmit="return false;">
+      <!-- STEP 0: Welcome & Respondent Info -->
+      <section id="stepIntro" class="card wizard-step active">
+        <div class="card-header text-center">
+          <div class="section-badge">Bắt đầu thôi nè 👋✨</div>
+          <h2 class="card-title text-2xl">Kèo Vi Vu Nam Du 3N2Đ 🏝️</h2>
+          <p class="card-desc">Nhập tên hoặc nickname để chủ xị biết ai đang bình chọn nha!</p>
+        </div>
+
+        <div class="form-grid mt-4">
+          <div class="form-group">
+            <label for="respondentName">Tên của bạn <span class="required">*</span></label>
+            <input type="text" id="respondentName" name="respondentName" placeholder="Ví dụ: Anh Tí, anh Tèo" required />
+          </div>
+
+          <div class="form-group">
+            <label for="respondentDept">Biệt danh / Nickname trong nhóm (Tùy chọn)</label>
+            <input type="text" id="respondentDept" name="respondentDept" placeholder="Ví dụ: Chiến thần lặn biển / Tay lái lụa" />
+          </div>
+        </div>
+
+        <div class="wizard-footer justify-center mt-6">
+          <button type="button" id="startSurveyBtn" class="btn btn-primary btn-lg">
+            <span>Bắt Đầu Khảo Sát 🚀</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- STEP 1 -> N: Single Question View (Rendered Dynamically) -->
+      <section id="stepQuestion" class="card wizard-step" style="display: none;">
+        <!-- Single Question Header -->
+        <div class="question-step-header">
+          <div class="question-step-badge">
+            <span id="currentQuestionBadge">Câu 1 / 10</span>
+          </div>
+          <h2 id="currentQuestionTitle" class="current-question-text">Đang tải câu hỏi...</h2>
+        </div>
+
+        <!-- 4 Options Grid -->
+        <div id="singleOptionsContainer" class="options-grid"></div>
+
+        <!-- Option D Custom Opinion Input Field -->
+        <div class="custom-opinion-wrap" id="singleCustomOpinionWrap" style="display: none;">
+          <div class="custom-opinion-box">
+            <span class="custom-opinion-icon">✍️</span>
+            <input type="text" id="singleCustomOpinionInput" placeholder="Gõ ý kiến đóng góp hoặc đề xuất riêng của bạn vào đây..." />
+          </div>
+        </div>
+
+        <!-- Navigation Buttons for Question Step -->
+        <div class="wizard-nav-bar">
+          <button type="button" id="prevQuestionBtn" class="btn btn-secondary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>Quay lại</span>
+          </button>
+
+          <div class="step-indicator-dots" id="stepDots"></div>
+
+          <button type="button" id="nextQuestionBtn" class="btn btn-primary">
+            <span>Tiếp theo</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- STEP FINAL: Review & Submit -->
+      <section id="stepReview" class="card wizard-step" style="display: none;">
+        <div class="card-header text-center">
+          <div class="section-badge">Bước cuối cùng rùi nè 🏁💖</div>
+          <h2 class="card-title text-2xl">Xem Lại &amp; Chốt Kèo Nào</h2>
+          <p class="card-desc">Bạn đã trả lời xong 8 câu hỏi siêu tốc! Kiểm tra lại và bấm chốt deal nha.</p>
+        </div>
+
+        <!-- Additional Feedback Note -->
+        <div class="form-group mt-4">
+          <label for="additionalFeedback">Lời nhắn nhủ / Đề xuất thêm cho chuyến đi:</label>
+          <textarea id="additionalFeedback" rows="3" placeholder="Ví dụ: Nhớ mang theo loa kéo, hoặc nhắc mọi người mua sẵn kem chống nắng..."></textarea>
+        </div>
+
+        <!-- Answers Quick Recap -->
+        <div class="review-answers-box mt-4">
+          <h4 class="review-box-title">Tóm tắt các câu bạn đã chọn:</h4>
+          <div id="reviewAnswersList" class="review-answers-list"></div>
+        </div>
+
+        <!-- Validation Alert -->
+        <div class="footer-status mt-4" id="validationAlert" style="display:none;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span id="validationMsg">Vui lòng hoàn thành tất cả các câu hỏi.</span>
+        </div>
+
+        <!-- Submit Footer Buttons -->
+        <div class="wizard-footer space-between mt-6">
+          <button type="button" id="reviewBackBtn" class="btn btn-secondary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>Sửa lại câu hỏi</span>
+          </button>
+
+          <div class="submit-action-group">
+            <button type="button" id="exportDataBtn" class="btn btn-outline" style="display: none;" title="Tải về file kết quả (JSON)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Xuất JSON</span>
+            </button>
+
+            <button type="button" id="submitSurveyBtn" class="btn btn-primary btn-lg">
+              <span id="submitSpinner" class="spinner" style="display:none;"></span>
+              <svg id="submitIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+              <span id="submitBtnText">Chốt Deal 🚀</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP PLAN: Personalized Trip Itinerary Plan (Shown After Submit) -->
+      <section id="stepPlan" class="card wizard-step" style="display: none;">
+        <div class="card-header text-center">
+          <div class="section-badge pulse-badge">Kèo Đã Chốt Deal Thành Công! 🎉</div>
+          <h2 class="card-title text-2xl">Lịch Trình 3N2Đ Gợi Ý Cho <span id="planRespondentName" class="highlight-name">Bạn</span> 🏝️✨</h2>
+          <p class="card-desc">Lịch trình tự động cá nhân hóa theo đúng điểm lưu trú và gu trải nghiệm bạn vừa chọn!</p>
+        </div>
+
+        <!-- Plan Meta Highlights Bar -->
+        <div class="plan-highlights-bar">
+          <div class="plan-highlight-pill">
+            <span class="pill-icon">🏨</span>
+            <div>
+              <small>Chỗ ở đã chọn:</small>
+              <strong id="planHotelName">Đang cập nhật...</strong>
+            </div>
+          </div>
+          <div class="plan-highlight-pill">
+            <span class="pill-icon">🦑</span>
+            <div>
+              <small>Tour câu mực đêm:</small>
+              <strong id="planSquidTour">Rất hào hứng</strong>
+            </div>
+          </div>
+          <div class="plan-highlight-pill">
+            <span class="pill-icon">💰</span>
+            <div>
+              <small>Ngân sách ước tính:</small>
+              <strong id="planBudgetValue">Khoảng 3.0 - 5.0 triệu</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plan Tabs Switcher for Evaluation -->
+        <div class="plan-header-controls">
+          <div class="plan-tabs-wrap">
+            <button type="button" class="plan-tab-btn active" data-plan="chill">🌴 Plan 1: Chill &amp; BBQ Bãi Biển</button>
+            <button type="button" class="plan-tab-btn" data-plan="luxury">🏊‍♂️ Plan 2: Nghỉ Dưỡng &amp; Hồ Bơi Biển</button>
+            <button type="button" class="plan-tab-btn" data-plan="adventure">🦑 Plan 3: Khám Phá &amp; Bắt Mực Đêm</button>
+          </div>
+          <div class="plan-cost-action-group">
+            <button type="button" id="togglePlanCostBtn" class="btn-cost-toggle active" title="Bật/Tắt bảng chi phí của plan hiện tại">
+              <span class="btn-icon">💰</span>
+              <span id="togglePlanCostLabel">Xem chi phí Plan 1</span>
+            </button>
+            <button type="button" id="openPlanCostModalBtn" class="btn-cost-compare" title="Mở bảng so sánh chi phí chi tiết cả 3 Plans">
+              <span class="btn-icon">⚖️</span>
+              <span>So sánh chi phí 3 Plans</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Detailed Cost Estimation Card (3N2D Nam Du) -->
+        <div class="cost-breakdown-card" id="costBreakdownCard">
+          <div class="cost-breakdown-header">
+            <div class="cost-title-group">
+              <span class="cost-badge">💰 BẢNG TÍNH CHI PHÍ DỰ KIẾN 3N2Đ</span>
+              <h3 class="cost-header-title">Dự Toán Chi Phí Chi Tiết Từng Người (Tour Nam Du 3N2Đ)</h3>
+              <p class="cost-header-desc">Bao gồm xe khách Phương Trang, tàu Superdong, ăn sáng 3 ngày, hải sản chính &amp; nơi lưu trú bạn đã chọn.</p>
+            </div>
+            <div class="cost-total-pill">
+              <span class="total-label">TỔNG CHI PHÍ ƯỚC TÍNH:</span>
+              <span class="total-amount" id="costEstimatedTotal">~2.750.000 - 3.450.000 VNĐ / người</span>
+            </div>
+          </div>
+
+          <div class="cost-table-responsive">
+            <table class="cost-table">
+              <thead>
+                <tr>
+                  <th>Hạng mục chi phí</th>
+                  <th>Chi tiết dịch vụ &amp; Ghi chú</th>
+                  <th>Mức giá ước tính / người</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="cost-item-name">🚌 Xe khách Phương Trang (Khứ hồi)</span></td>
+                  <td>TP.HCM ⇄ Rạch Giá (Xe giường nằm / Limousine, bao gồm đón trả tại bến)</td>
+                  <td><strong class="cost-val">~360.000 - 400.000 đ</strong> <small class="text-muted">(180k - 200k/lượt)</small></td>
+                </tr>
+                <tr>
+                  <td><span class="cost-item-name">🚢 Tàu cao tốc Superdong (Khứ hồi)</span></td>
+                  <td>Rạch Giá ⇄ Nam Du (Đồng giá vé khứ hồi niêm yết của hãng)</td>
+                  <td><strong class="cost-val">~500.000 - 520.000 đ</strong> <small class="text-muted">(250k - 260k/lượt)</small></td>
+                </tr>
+                <tr>
+                  <td><span class="cost-item-name">🥣 Bữa sáng 3 ngày trên đảo</span></td>
+                  <td>3 bữa sáng: Bún cá Kiên Giang, bún quậy / hủ tiếu hải sản, bánh mì chả cá + cà phê / nước uống (~40k - 50k/bữa)</td>
+                  <td><strong class="cost-val">~120.000 - 150.000 đ</strong> <small class="text-muted">(40k - 50k x 3 bữa)</small></td>
+                </tr>
+                <tr>
+                  <td><span class="cost-item-name">🦞 Ăn uống chính 3N2Đ</span></td>
+                  <td>2 bữa trưa cơm gia đình cá bớp + 1 tiệc tối BBQ hải sản bãi biển + 1 bữa tối tự do/chợ đêm</td>
+                  <td><strong class="cost-val">~750.000 - 950.000 đ</strong></td>
+                </tr>
+                <tr class="highlight-row">
+                  <td>
+                    <span class="cost-item-name">🏨 Nhà nghỉ / Homestay (2 đêm)</span>
+                    <div class="cost-sub-note" id="costSelectedHotelName">Theo gu bạn chọn</div>
+                  </td>
+                  <td id="costSelectedHotelDesc">Phòng view biển / bungalow chia sẻ theo nhóm (2 đêm)</td>
+                  <td><strong class="cost-val text-primary" id="costSelectedHotelPrice">~500.000 - 800.000 đ</strong></td>
+                </tr>
+                <tr>
+                  <td><span class="cost-item-name">🛵 Xe máy &amp; Cano đi tour đảo</span></td>
+                  <td>Thuê xe máy 2 ngày đổ xăng (150k/xe/2 người) + Cano tham quan Hòn Dầu, Hòn Mấu, lặn san hô Hai Bờ Đập</td>
+                  <td><strong class="cost-val">~400.000 - 500.000 đ</strong></td>
+                </tr>
+                <tr>
+                  <td><span class="cost-item-name">🦑 Tour câu mực đêm (Tuỳ chọn)</span></td>
+                  <td>Tàu câu đêm + cần câu + mồi + nấu cháo mực / mực hấp trực tiếp trên boong</td>
+                  <td><strong class="cost-val" id="costSquidRowVal">~200.000 - 250.000 đ</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="cost-footer-note">
+            💡 <em>Mẹo tiết kiệm: Đi theo nhóm từ 4-8 người chia phòng và chia sẻ xe máy, cano sẽ tối ưu mức giá tốt nhất, dao động trung bình chỉ từ 2.8 - 3.4 triệu/người trọn gói 3N2Đ!</em>
+          </div>
+        </div>
+
+        <!-- Dynamic Timeline Container -->
+        <div id="planTimelineContainer" class="plan-timeline-container">
+          <!-- Rendered dynamically based on chosen plan -->
+        </div>
+
+        <!-- Plan Footer Actions -->
+        <div class="wizard-footer justify-between mt-6">
+          <button type="button" id="planBackToSurveyBtn" class="btn btn-secondary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>Làm lại bài khảo sát</span>
+          </button>
+
+          <button type="button" id="copyPlanTextBtn" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span>Sao chép lịch trình gửi nhóm</span>
+          </button>
+        </div>
+      </section>
+    </form>
+  </main>
+
+
+
+  <!-- Modal: Submission Success -->
+  <div id="successModal" class="modal-overlay" style="display:none;">
+    <div class="modal-card modal-success">
+      <div class="success-icon-wrap">
+        <div class="success-icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+      </div>
+      <h2>Gửi Khảo Sát Thành Công!</h2>
+      <p id="successMessageDetail">Cảm ơn bạn đã tham gia khảo sát. Toàn bộ kết quả đã được gửi về email quản trị viên.</p>
+
+      <div class="submission-summary" id="submissionSummary">
+        <!-- Rendered summary -->
+      </div>
+
+      <div class="modal-footer justify-center">
+        <button id="newSurveyBtn" class="btn btn-primary">Thực hiện lại</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: So Sánh Chi Phí 3 Plans Du Lịch Nam Du -->
+  <div id="costComparisonModal" class="modal-overlay" style="display:none;">
+    <div class="modal-card cost-modal-card">
+      <div class="modal-header-row">
+        <div class="stats-title-wrap">
+          <div class="stats-badge-icon">💰</div>
+          <div>
+            <h3 class="stats-modal-title">Bảng So Sánh Chi Phí Cả 3 Plans (Tour Nam Du 3N2Đ)</h3>
+            <p class="stats-modal-subtitle">Dự toán từng hạng mục, giúp cả nhóm dễ dàng chọn plan vừa túi tiền nhất!</p>
+          </div>
+        </div>
+        <button type="button" class="close-modal-btn" id="closeCostModalBtn" title="Đóng bảng so sánh">✕</button>
+      </div>
+
+      <div class="cost-comparison-container" id="costComparisonModalContent">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+
+      <div class="modal-footer justify-between mt-4">
+        <span class="text-xs text-muted">💡 Tất cả các plan đều đã bao gồm trọn gói: xe Phương Trang, tàu Superdong &amp; ăn sáng 3 ngày</span>
+        <button type="button" class="btn btn-secondary" id="closeCostModalFooterBtn">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Chill Background Audio Loop from User FB Track -->
+  <audio id="bgBeachAudio" src="beach_bg_music.mp3" loop autoplay preload="auto"></audio>
+
+  <script src="app.js"></script>
+</body>
+</html>
